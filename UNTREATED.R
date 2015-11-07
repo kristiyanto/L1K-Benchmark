@@ -1,3 +1,16 @@
+####################### ABOUT THE SCRIPT #######################
+
+# THIS SCRIPT COMPARES GENE EXPRESSION FOR UNPERTURB (UNTREATED)
+# CELL LINES BETWEEN BROAD CCLE DATA AND 
+# LINCS L1000 DATA (LEVEL 2.5 ESEMBLE, 2.5 INDIVIDUAL, LEVEL 3 AND LEVEL 4)
+# 
+# COMPARASION DONE BY MEASURING CORRELATION, SPEARMAN AND PEARSON
+# 
+# BY DANIEL KRISTIYANTO (DANIELKR@UW.EDU)
+# AUTUMN 2015
+
+################################################################
+
 
 breakit <- function(x)
 {
@@ -10,159 +23,165 @@ removex <- function(x)
   return(y)
 }
 
-
-do.corr <- function(x)
+trimCCLE <- function(x)
 {
-  s2i <- cor(l2i[,x], CCLE.trimmed[,x], use="complete.obs", method="spearman") 
-  p2i <- cor(l2i[,x], CCLE.trimmed[,x], use="complete.obs", method="pearson") 
-  
-  s2 <- cor(l2[,x], CCLE.trimmed[,x], use="complete.obs", method="spearman") 
-  p2 <- cor(l2[,x], CCLE.trimmed[,x], use="complete.obs", method="pearson") 
-  
-  s3 <- cor(as.numeric(l3[,x]), CCLE.trimmed[,x], use="complete.obs", method="spearman") 
-  p3 <- cor(as.numeric(l3[,x]), CCLE.trimmed[,x], use="complete.obs", method="pearson") 
-  
-  s4 <- cor(as.numeric(l4[,x]), CCLE.trimmed[,x], use="complete.obs", method="spearman") 
-  p4 <- cor(as.numeric(l4[,x]), CCLE.trimmed[,x], use="complete.obs", method="pearson") 
-  
-  y <- rbind(s2i,p2i,s2,p2,s3,p3,s4,p4)
+  CCLE.trimmed         <- CCLE[,paste(CELL.LINES)]
+  y                    <- CCLE.trimmed[CCLE$Description %in% names(x),]
+  row.names(y)         <- y$Description
+  y$Description        <- NULL
   return(y)
 }
+
+####################### CELL LINES TO COMPARE #######################
+setwd("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-Benchmark/")
+CELL.LINES            <- read.csv(file="INTERSECT-CLINES-UNTRT.txt")
+CELL.LINES            <- unlist(CELL.LINES)
+
 ####################### READ CCLE TABLE #######################
 
-CCLE                  <- read.table("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K/DATA/FROM KEBRA/V2_CCLE_Expression_Entrez_2012-09-29.gct", sep = "\t", header = T)    # File for CCLE
+CCLE                  <- read.table("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-Benchmark/DATA/FROM KEBRA/V2_CCLE_Expression_Entrez_2012-09-29.gct", sep = "\t", header = T)    # File for CCLE
 ccle.clines           <- names(CCLE)
 ccle.clines           <- lapply(ccle.clines, breakit)
 ccle.clines           <- unlist(ccle.clines)
 names(CCLE)           <- ccle.clines
 
-
-CCLE.trimmed                   <- CCLE[CCLE$Description %in% row.names(l2i),]
-row.names(CCLE.trimmed)        <- CCLE.trimmed$Description
-CCLE.trimmed                   <- CCLE.trimmed[,paste(CELL.LINES)]
-CCLE.trimmed                   <- CCLE.trimmed[order(row.names(CCLE.trimmed)),]
+# 
 
 
-####################### CELL LINES TO COMPARE #######################
-setwd("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K/")
-CELL.LINES            <- read.csv(file="INTERSECT-CLINES-UNTRT.txt")
-CELL.LINES            <- unlist(CELL.LINES)
 ####################### LEVEL 2.5 INDIVIDUAL #######################
-setwd("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K/UNTRT/Lv25i/")
+setwd("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-BENCHMARK/UNTRT/Lv25i/")
 
-raw.l2i <- NULL
+l2i             <- NULL
+l2i.samples     <- NULL
+l2i.spearman    <- NULL
+l2i.pearson     <- NULL
 for(curr.clines in CELL.LINES)
 {
-  x       <- read.csv(file = paste0(curr.clines,".txt"),sep="\t")
-  raw.l2i <- rbind(raw.l2i,x[1,])  
+  x             <- read.csv(file = paste0(curr.clines,".txt"),sep="\t")
+  x             <- x[,intersect(names(x),CCLE$Description)]
+  CCLE.trimmed  <- trimCCLE(x)
+  well.no       <- seq(1,nrow(x),1)
+  well.no       <- paste(curr.clines,well.no,sep="_")
+  l2i.samples   <- c(l2i.samples,rep(curr.clines,nrow(x)))
+  row.names(x)  <- well.no
+  l2i           <- rbind(l2i,x)
+  cor.sp        <- apply(x,1, function(a) cor(a, CCLE.trimmed[,curr.clines], use="complete.obs", method="spearman"))
+  l2i.spearman  <- c(l2i.spearman,cor.sp)
+  cor.pr        <- apply(x,1, function(a) cor(a, CCLE.trimmed[,curr.clines], use="complete.obs", method="pearson"))
+  l2i.pearson   <- c(l2i.pearson,cor.pr)
 }
-l2i             <- raw.l2i
-l2i.samples     <- l2i[,1]
-l2i$Sample      <- NULL
-l2i             <- l2i[,intersect(names(l2i),CCLE$Description)]
-l2i             <- as.data.frame(t(l2i))
-colnames(l2i)   <- CELL.LINES
-l2i             <- l2i[order(row.names(l2i)),]
+l2i             <- cbind(l2i.samples,l2i)
+l2i.cor         <- cbind(l2i.samples,l2i.spearman,l2i.pearson)
 
 ####################### LEVEL 2.5  #######################
-setwd("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K/UNTRT/Lv25/")
+setwd("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-Benchmark/UNTRT/Lv25/")
 
-raw.l2 <- NULL
+l2          <- NULL
+l2.cor      <- NULL
+l2.spearman <- NULL
+l2.pearson  <- NULL
 for(curr.clines in CELL.LINES)
 {
-  x       <- read.csv(file = paste0(curr.clines,".txt"),sep="\t")
-  raw.l2 <- rbind(raw.l2,x[1,])  
+  x             <- read.csv(file = paste0(curr.clines,".txt"),sep="\t")
+  x             <- x[1,intersect(names(x),CCLE$Description)]
+  CCLE.trimmed  <- trimCCLE(x)
+  l2.spearman   <- c(l2.spearman,cor(unlist(x), CCLE.trimmed[,curr.clines], use="complete.obs", method="spearman"))
+  l2.pearson    <- c(l2.pearson,cor(unlist(x), CCLE.trimmed[,curr.clines], use="complete.obs", method="pearson"))
+  l2            <- rbind(l2,x)
 }
 
-l2             <- raw.l2
-l2.samples     <- l2[,1]
-l2$Sample      <- NULL
-l2             <- l2[,intersect(names(l2),CCLE$Description)]
-l2             <- as.data.frame(t(l2))
-colnames(l2)   <- CELL.LINES
-l2             <- l2[order(row.names(l2)),]
+l2              <- cbind(CELL.LINES,l2)
+row.names(l2)   <- CELL.LINES
+l2.cor          <- cbind(CELL.LINES,l2.pearson, l2.spearman)
 
 
 ####################### LEVEL 3  #######################
-setwd("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K/UNTRT/L3/")
+setwd("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-Benchmark/UNTRT/L3/")
 
-raw.l3 <- NULL
+l3             <- NULL
+l3.samples     <- NULL
+l3.spearman    <- NULL
+l3.pearson     <- NULL
 for(curr.clines in CELL.LINES)
 {
-  x       <- read.csv(file = paste0(curr.clines,".txt"),sep="\t")
-  y       <- colMeans(x[2:ncol(x)])
-  raw.l3  <- rbind(raw.l3,c(curr.clines,y))
+  x             <- read.csv(file = paste0(curr.clines,".txt"),sep="\t")
+  x             <- x[,intersect(names(x),CCLE$Description)]
+  CCLE.trimmed  <- trimCCLE(x)
+  well.no       <- seq(1,nrow(x),1)
+  well.no       <- paste(curr.clines,well.no,sep="_")
+  l3.samples   <- c(l3.samples,rep(curr.clines,nrow(x)))
+  row.names(x)  <- well.no
+  l3           <- rbind(l3,x)
+  cor.sp        <- apply(x,1, function(a) cor(a, CCLE.trimmed[,curr.clines], use="complete.obs", method="spearman"))
+  l3.spearman  <- c(l3.spearman,cor.sp)
+  cor.pr        <- apply(x,1, function(a) cor(a, CCLE.trimmed[,curr.clines], use="complete.obs", method="pearson"))
+  l3.pearson   <- c(l3.pearson,cor.pr)
 }
-
-l3             <- as.data.frame(raw.l3)
-l3             <- l3[,intersect(names(l3),CCLE$Description)]
-l3             <- as.data.frame(t(l3))
-colnames(l3)   <- CELL.LINES
-l3             <- l3[order(row.names(l3)),]
+l3             <- cbind(l3.samples,l3)
+l3.cor         <- cbind(l3.samples,l3.spearman,l3.pearson)
 
 
 ####################### LEVEL 4  #######################
-setwd("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K/UNTRT/L4/")
+setwd("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-Benchmark/UNTRT/L4/")
 
-raw.l4 <- NULL
+l4             <- NULL
+l4.samples     <- NULL
+l4.spearman    <- NULL
+l4.pearson     <- NULL
 for(curr.clines in CELL.LINES)
 {
-  x       <- read.csv(file = paste0(curr.clines,".txt"),sep="\t")
-  y       <- colMeans(x[2:ncol(x)])
-  raw.l4  <- rbind(raw.l4,c(curr.clines,y))
+  x             <- read.csv(file = paste0(curr.clines,".txt"),sep="\t")
+  x             <- x[,intersect(names(x),CCLE$Description)]
+  CCLE.trimmed  <- trimCCLE(x)
+  well.no       <- seq(1,nrow(x),1)
+  well.no       <- paste(curr.clines,well.no,sep="_")
+  l4.samples   <- c(l4.samples,rep(curr.clines,nrow(x)))
+  row.names(x)  <- well.no
+  l4           <- rbind(l4,x)
+  cor.sp        <- apply(x,1, function(a) cor(a, CCLE.trimmed[,curr.clines], use="complete.obs", method="spearman"))
+  l4.spearman  <- c(l4.spearman,cor.sp)
+  cor.pr        <- apply(x,1, function(a) cor(a, CCLE.trimmed[,curr.clines], use="complete.obs", method="pearson"))
+  l4.pearson   <- c(l4.pearson,cor.pr)
 }
-
-l4             <- as.data.frame(raw.l4)
-l4             <- l4[,intersect(names(l4),CCLE$Description)]
-l4             <- as.data.frame(t(l4))
-colnames(l4)   <- CELL.LINES
-l4             <- l4[order(row.names(l4)),]
-
-
-####################### CORRELATION  #######################
-
-RESULT <- NULL
-for(curr.clines in CELL.LINES)
-{
-  RESULT      <- cbind(RESULT,do.corr(curr.clines))
-}
-RESULT        <- as.data.frame(RESULT)
-names(RESULT) <- CELL.LINES
+l4             <- cbind(l4.samples,l4)
+l4.cor         <- cbind(l4.samples,l3.spearman,l4.pearson)
 
 
 ####################### EXPORT TO TABLEU  #######################
 
-res.tab <- cbind(c("Lv2.5-Ind","Lv2.5-Ind","Lv2.5","Lv2.5","Lv3","Lv3","Lv4","Lv4"), RESULT)
-res.tab <- cbind(rep(c("Spearman","Pearson"),4),res.tab)
-names(res.tab)[1] <- "Method"
-names(res.tab)[2] <- "Level"
+lv.2  <- cbind("Lv.2.5","NA",l2)
+lv.2i <- cbind("Lv.2.5i",row.names(l2i),l2i)
+lv.3  <- cbind("Lv.3",row.names(l3),l3)
+lv.4  <- cbind("Lv.4",row.names(l4),l4)
+
+names(lv.2)[1] <- "LEVEL"
+names(lv.2)[2] <- "WELL-NO"
+names(lv.2)[3] <- "CELL-LINE"
+
+
+names(lv.2i)[1] <- "LEVEL"
+names(lv.2i)[2] <- "WELL-NO"
+names(lv.2i)[3] <- "CELL-LINE"
+
+
+names(lv.3)[1] <- "LEVEL"
+names(lv.3)[2] <- "WELL-NO"
+names(lv.3)[3] <- "CELL-LINE"
+
+names(lv.4)[1] <- "LEVEL"
+names(lv.4)[2] <- "WELL-NO"
+names(lv.4)[3] <- "CELL-LINE"
+
+raw.tableu    <- rbind(lv.2,lv.2i,lv.3,lv.4)
 library(reshape2)
-res.tab         <- melt(res.tab, id=c("Method","Level"))
-names(res.tab)  <- c("Method","Level","Cell.Line","Correlation")
-write.csv(res.tab, file="/Users/Daniel/Google Drive/BIOINFORMATICS/L1K/TABLEU/CCLEvsL1K-Untreated.csv", row.names = F)
+raw.tableu    <- melt(raw.tableu, id=c("LEVEL","WELL-NO", "CELL-LINE"))
+names(raw.tableu)[4] <- "GENE"
+names(raw.tableu)[5] <- "EXP"
+
+write.csv(raw.tableu, file="/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-Benchmark/TABLEU/AllWells-L1K-un.csv", row.names = F)
 
 
-l2i.tab           <- cbind("Level2.5.Ind", row.names(l2i.tab),l2i)
-l2.tab            <- cbind("Level2.5", row.names(l2i.tab), l2)
-l3.tab            <- cbind("Level3", row.names(l2i.tab),l3)
-l4.tab            <- cbind("Level4", row.names(l2i.tab),l4)
-CCLE.trimmed.tab  <- cbind("CCLE",row.names(l2i.tab),CCLE.trimmed)
-names(l2i.tab)[1] <- "Level"
-names(l2.tab)[1]  <- "Level"
-names(l3.tab)[1]  <- "Level"
-names(l4.tab)[1]  <- "Level"
-names(CCLE.trimmed.tab)[1]  <- "Level"
-
-names(l2i.tab)[2] <- "Gene"
-names(l2.tab)[2]  <- "Gene"
-names(l3.tab)[2]  <- "Gene"
-names(l4.tab)[2]  <- "Gene"
-names(CCLE.trimmed.tab)[2]  <- "Gene"
-raw.tab           <- rbind(l2i.tab,l2.tab,l3.tab,l4.tab)
-raw.tab           <- melt(raw.tab, id=c("Level","Gene"))
-raw.tab.ccle      <- melt(CCLE.trimmed.tab, id=c("Level","Gene"))
-names(raw.tab)    <- c("Level","Gene","CellLine","Expression")
-names(raw.tab.ccle)    <- c("Level","Gene","CellLine","Expression")
-write.csv(raw.tab, file="/Users/Daniel/Google Drive/BIOINFORMATICS/L1K/TABLEU/CCLEvsL1K-Untreated-Raw.csv", row.names = F)
-write.csv(raw.tab, file="/Users/Daniel/Google Drive/BIOINFORMATICS/L1K/TABLEU/CCLEvsL1K-Untreated-ccle.csv", row.names = F)
-
+CCLE.tableu <- CCLE[CCLE$Description %in% levels(raw.tableu$GENE),c("Description",levels(CELL.LINES))]
+CCLE.tableu <- melt(CCLE.tableu, id=c("Description"))
+names(CCLE.tableu) <- c("GENE","CELL-LINE","CCLE")
+write.csv(raw.tableu, file="/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-Benchmark/TABLEU/CCLE.csv", row.names = F)
