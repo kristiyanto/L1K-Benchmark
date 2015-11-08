@@ -25,8 +25,7 @@ removex <- function(x)
 
 trimCCLE <- function(x)
 {
-  CCLE.trimmed         <- as.data.frame(CCLE[,c("Description",paste(CELL.LINES))])
-  y                    <- CCLE.trimmed[CCLE$Description %in% names(x),]
+  y                   <- as.data.frame(CCLE[CCLE$Description %in% names(x),c("Description",paste(CELL.LINES))])
   row.names(y)         <- y$Description
   y$Description        <- NULL
   return(y)
@@ -140,11 +139,12 @@ for(curr.clines in CELL.LINES)
   x             <- read.csv(file = paste0(curr.clines,".txt"),sep="\t")
   x             <- x[,intersect(names(x),CCLE$Description)]
   CCLE.trimmed  <- trimCCLE(x)
+  CCLE.trimmed[CCLE.trimmed < 0]  <- NA
   well.no       <- seq(1,nrow(x),1)
   well.no       <- paste(curr.clines,well.no,sep="_")
   l4.samples    <- c(l4.samples,rep(curr.clines,nrow(x)))
   row.names(x)  <- well.no
-  l4.average    <-   rbind(l4.average, colMeans(x))
+  l4.average    <- rbind(l4.average, colMeans(x))
   l4            <- rbind(l4,x)
   cor.sp        <- apply(x,1, function(a) cor(a, CCLE.trimmed[names(a),curr.clines], use="complete.obs", method="spearman"))
   l4.spearman   <- c(l4.spearman,cor.sp)
@@ -152,16 +152,16 @@ for(curr.clines in CELL.LINES)
   l4.pearson    <- c(l4.pearson,cor.pr)
 }
 l4              <- cbind(l4.samples,l4)
-l4.cor          <- cbind("Lv.4",l4.samples,as.data.frame(l3.spearman),as.data.frame(l4.pearson))
+l4.cor          <- cbind("Lv.4",l4.samples,as.data.frame(l4.spearman),as.data.frame(l4.pearson))
 row.names(l4.average) <- CELL.LINES
 
 ####################### EXPORT TO TABLEU  #######################
 
 ## AVERAGED VALUE FOR SCATTER PLOT
-lv.2  <- cbind("Lv.2.5",l2)
-lv.2i <- cbind("Lv.2.5i",row.names(l2i.average),as.data.frame(l2i.average))
-lv.3  <- cbind("Lv.3",row.names(l3.average),as.data.frame(l3.average))
-lv.4  <- cbind("Lv.4",row.names(l4.average),as.data.frame(l4.average))
+lv.2  <- cbind("Lv 2.5",l2)
+lv.2i <- cbind("Lv 2.5i",row.names(l2i.average),as.data.frame(l2i.average))
+lv.3  <- cbind("Lv 3",row.names(l3.average),as.data.frame(l3.average))
+lv.4  <- cbind("Lv 4",row.names(l4.average),as.data.frame(l4.average))
 
 
 names(lv.2)[1] <- "LEVEL"
