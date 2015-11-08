@@ -191,7 +191,6 @@ write.csv(CCLE.tableu, file="/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-Bench
 
 
 ## CORRELATION DATA
-
 names(l2.cor)   <- c("Level","CELL-LINE","SPEARMAN","PEARSON")
 names(l2i.cor)  <- c("Level","CELL-LINE","SPEARMAN","PEARSON")
 names(l3.cor)   <- c("Level","CELL-LINE","SPEARMAN","PEARSON")

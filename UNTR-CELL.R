@@ -1,14 +1,25 @@
-
-
+#########################################################################
+# THIS SCRIPT IS TO FIND THE CELL LINES TO COMPARE BETWEEN LINCS L1K 
+# AND CCLE. 
+# THE OUTPUT IS THE CELL LINES THAT ARE FOUND BOTH IN CCLE AND L1K.
+# BY DANIEL KRISTIYANTO (DANIELKR@UW.EDU)
+# AUTUMN 2015
+#########################################################################
 breakit <- function(x)
 {
   y <- unlist(strsplit(x,"_"))[1]
   return(y)
 }
-#########################################################################
+
 
 run.this=0
 if(run.this==1)
+  
+#########################################################################
+# THIS CELL LINES LIST IS ACCUIRED BY RUNNING A QUERY IN LINCS TOOL:
+# SELECTING ALL CELL LINES GIVEN PERTUBATION DESCRIPTION UNTREATED.
+#########################################################################
+
 l1k.untrt <- factor(c("A375",
         "A375",
         "A375",
@@ -57,13 +68,16 @@ l1k.untrt <- factor(c("A375",
         "VCAP",
         "VCAP"))
 
+#########################################################################
+# DO INTERSECTION OF CELL LINES FOUND IN L1K WITH CCLE
+#########################################################################
+
 l1k.clines            <- levels(l1k.untrt)
 CCLE.data             <- read.table("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K/DATA/FROM KEBRA/V2_CCLE_Expression_Entrez_2012-09-29.gct", sep = "\t", header = T)    # File for CCLE
 ccle.clines           <- names(CCLE.data)
-ccle.clines           <- lapply(ccle.clines, breakit)
-ccle.clines           <- unlist(ccle.clines)
+ccle.clines           <- lapply(ccle.clines, breakit)       # ONLY USE THE FIRST WORD BEFORE '_' IN CCLE
+ccle.clines           <- unlist(ccle.clines)                
+intersect.clines      <- intersect(ccle.clines,l1k.clines)  # THIS IS THE RESULT
 
-intersect.clines      <- intersect(ccle.clines,l1k.clines)
-
-setwd("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K/")
-# write.csv(intersect.clines,file = "INTERSECT-CLINES-UNTRT.txt", row.names = F)
+setwd("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K/")     
+write.csv(intersect.clines,file = "INTERSECT-CLINES-UNTRT.txt", row.names = F)
