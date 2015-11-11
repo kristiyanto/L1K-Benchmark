@@ -79,5 +79,20 @@ ccle.clines           <- lapply(ccle.clines, breakit)       # ONLY USE THE FIRST
 ccle.clines           <- unlist(ccle.clines)                
 intersect.clines      <- intersect(ccle.clines,l1k.clines)  # THIS IS THE RESULT
 
-setwd("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K/")     
+setwd("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-Benchmark/")     
 write.csv(intersect.clines,file = "INTERSECT-CLINES-UNTRT.txt", row.names = F)
+
+#########################################################################
+# DO INTERSECTION OF CELL LINES FOUND IN L1K WITH ARRAY EXPRESS
+#########################################################################
+library(stringr)
+ax.meta               <- read.table("DATA/E_MTAB_2706_sdrf.txt", header = T, sep="\t",stringsAsFactors = F, quote = NULL, comment = "")
+ax.celines            <- levels(factor(ax.meta$Characteristics.cell.line.))
+ax.celines            <- str_replace_all(ax.celines, "-", "")
+ax.celines            <- str_replace_all(ax.celines, " ", "")
+ax.celines            <- str_replace_all(ax.celines, "'.'", "")
+ax.celines            <- str_replace_all(ax.celines, "/", "")
+
+ax.intersect          <- intersect(l1k.clines,ax.celines)
+setwd("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-Benchmark/")     
+write.csv(ax.intersect,file = "INTERSECT-CLINES-ARRAYX-UNTRT.txt", row.names = F)

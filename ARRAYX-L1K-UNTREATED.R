@@ -14,7 +14,8 @@
 
 breakit <- function(x)
 {
-  y <- unlist(strsplit(x,"_"))[1]
+  y <- unlist(strsplit(x,"-"))
+  y <- paste
   return(y)
 }
 removex <- function(x)
@@ -31,20 +32,26 @@ trimCCLE <- function(x)
   return(y)
 }
 
+
 ####################### CELL LINES TO COMPARE #######################
 setwd("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-Benchmark/")
-CELL.LINES            <- read.csv(file="INTERSECT-CLINES-UNTRT.txt")
+CELL.LINES            <- read.csv(file="INTERSECT-CLINES-ARRAYX-UNTRT.txt")
 CELL.LINES            <- unlist(CELL.LINES)
 
 ####################### READ CCLE TABLE #######################
 
-CCLE                  <- read.table("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-Benchmark/DATA/FROM KEBRA/V2_CCLE_Expression_Entrez_2012-09-29.gct", sep = "\t", header = T)    # File for CCLE
-ccle.clines           <- names(CCLE)
-ccle.clines           <- lapply(ccle.clines, breakit)
-ccle.clines           <- unlist(ccle.clines)
-names(CCLE)           <- ccle.clines
+ax                    <- read.csv("DATA/VSD_Entrez_in_landmark.csv", header = F)    # File for ARRAY-EXPRESS
+ax.meta               <- read.table("DATA/E_MTAB_2706_sdrf.txt", header = T, sep="\t",stringsAsFactors = F, quote = NULL, comment = "")
 
-# 
+ax.celines            <- levels(factor(ax.meta$Characteristics.cell.line.))
+ax.celines            <- str_replace_all(ax.celines, "-", "")
+ax.celines            <- str_replace_all(ax.celines, " ", "")
+ax.celines            <- str_replace_all(ax.celines, "'.'", "")
+ax.celines            <- str_replace_all(ax.celines, "/", "")
+
+ax.celines            <- c("ENTREZ", ax.celines)
+names(ax)             <- ax.celines
+ax.trimmed            <- ax[1:5,c(paste(CELL.LINES))]
 
 
 ####################### LEVEL 2.5 INDIVIDUAL #######################
