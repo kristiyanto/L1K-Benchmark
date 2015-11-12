@@ -212,5 +212,6 @@ names(l3.cor)   <- c("Level","CELL-LINE","SPEARMAN","PEARSON")
 names(l4.cor)   <- c("Level","CELL-LINE","SPEARMAN","PEARSON")
 cor.tableu      <- rbind(l2.cor,l2i.cor,l3.cor,l4.cor)
 cor.tableu      <- cbind("ARRYXPRESS", cor.tableu)
+names(cor.tableu)[1] <- "VERSUS"
 write.csv(cor.tableu, file="/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-Benchmark/TABLEU/UNTREAT-CORR-ARRXPRESS.csv", row.names = F)
 
