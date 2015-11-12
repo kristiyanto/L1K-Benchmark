@@ -42,6 +42,8 @@ CELL.LINES            <- unlist(CELL.LINES)
 
 ax                    <- read.csv("DATA/VSD_Entrez_in_landmark.csv", header = F)    # File for ARRAY-EXPRESS
 ax.meta               <- read.table("DATA/E_MTAB_2706_sdrf.txt", header = T, sep="\t",stringsAsFactors = F, quote = NULL, comment = "")
+ax$V1                 <- paste0("X", ax$V1)
+row.names(ax)         <- ax$V1
 
 ax.celines            <- levels(factor(ax.meta$Characteristics.cell.line.))
 ax.celines            <- str_replace_all(ax.celines, "-", "")
@@ -51,11 +53,11 @@ ax.celines            <- str_replace_all(ax.celines, "/", "")
 
 ax.celines            <- c("ENTREZ", ax.celines)
 names(ax)             <- ax.celines
-ax.trimmed            <- ax[1:5,c(paste(CELL.LINES))]
+ax.trimmed            <- ax[,c(paste(CELL.LINES))]
 
 
 ####################### LEVEL 2.5 INDIVIDUAL #######################
-setwd("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-BENCHMARK/UNTRT/Lv25i/")
+setwd("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-BENCHMARK/ARRAYXPRESS/Lv25i/")
 
 l2i             <- NULL
 l2i.samples     <- NULL
@@ -64,18 +66,20 @@ l2i.pearson     <- NULL
 l2i.average     <- NULL
 for(curr.clines in CELL.LINES)
 {
-  x             <- read.csv(file = paste0(curr.clines,".txt"),sep="\t")
-  x             <- x[,intersect(names(x),CCLE$Description)]
-  CCLE.trimmed  <- trimCCLE(x)
+  x             <- read.csv(file = paste0(curr.clines,"-entrez.txt"),sep="\t")
+  # names(x)      <- str_replace_all(names(x),"X","")
+  # x             <- x[,intersect(names(x),row.names(ax.trimmed))]
+  x$Sample      <- NULL
+  
   well.no       <- seq(1,nrow(x),1)
   well.no       <- paste(curr.clines,well.no,sep="_")
   l2i.samples   <- c(l2i.samples,rep(curr.clines,nrow(x)))
   row.names(x)  <- well.no
   l2i.average   <- rbind(l2i.average, colMeans(x))
   l2i           <- rbind(l2i,x)
-  cor.sp        <- apply(x,1, function(a) cor(a, CCLE.trimmed[names(a),curr.clines], use="complete.obs", method="spearman"))
+  cor.sp        <- apply(x,1, function(a) cor(a, ax.trimmed[names(a),curr.clines], use="complete.obs", method="spearman"))
   l2i.spearman  <- c(l2i.spearman,cor.sp)
-  cor.pr        <- apply(x,1, function(a) cor(a, CCLE.trimmed[names(a),curr.clines], use="complete.obs", method="pearson"))
+  cor.pr        <- apply(x,1, function(a) cor(a, ax.trimmed[names(a),curr.clines], use="complete.obs", method="pearson"))
   l2i.pearson   <- c(l2i.pearson,cor.pr)
 }
 l2i             <- cbind(l2i.samples,l2i)
@@ -83,7 +87,7 @@ l2i.cor         <- cbind("Lv.2.5i",l2i.samples,as.data.frame(l2i.spearman),as.da
 row.names(l2i.average) <- CELL.LINES
 
 ####################### LEVEL 2.5  #######################
-setwd("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-Benchmark/UNTRT/Lv25/")
+setwd("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-BENCHMARK/ARRAYXPRESS/Lv25/")
 
 l2          <- NULL
 l2.cor      <- NULL
@@ -91,11 +95,12 @@ l2.spearman <- NULL
 l2.pearson  <- NULL
 for(curr.clines in CELL.LINES)
 {
-  x             <- read.csv(file = paste0(curr.clines,".txt"),sep="\t")
-  CCLE.trimmed  <- trimCCLE(x)
-  x             <- x[1,row.names(CCLE.trimmed)]
-  l2.spearman   <- c(l2.spearman,cor(as.numeric(x[1,]), CCLE.trimmed[,curr.clines], use="complete.obs", method="spearman"))
-  l2.pearson    <- c(l2.pearson,cor(as.numeric(x[1,]), CCLE.trimmed[,curr.clines], use="complete.obs", method="pearson"))
+  x             <- read.csv(file = paste0(curr.clines,"-entrez.txt"),sep="\t")
+  # names(x)      <- str_replace_all(names(x),"X","")
+  x             <- x[1,]
+  x$Sample      <- NULL
+  l2.spearman   <- c(l2.spearman,cor(as.numeric(x[1,]), ax.trimmed[names(x),curr.clines], use="complete.obs", method="spearman"))
+  l2.pearson    <- c(l2.pearson,cor(as.numeric(x[1,]), ax.trimmed[names(x),curr.clines], use="complete.obs", method="pearson"))
   l2            <- rbind(l2,x)
 }
 
@@ -105,7 +110,7 @@ l2.cor          <- cbind("Lv.2.5",CELL.LINES,as.data.frame(l2.pearson), as.data.
 
 
 ####################### LEVEL 3  #######################
-setwd("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-Benchmark/UNTRT/L3/")
+setwd("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-BENCHMARK/ARRAYXPRESS/L3/")
 
 l3             <- NULL
 l3.samples     <- NULL
@@ -114,18 +119,20 @@ l3.pearson     <- NULL
 l3.average     <- NULL
 for(curr.clines in CELL.LINES)
 {
-  x             <- read.csv(file = paste0(curr.clines,".txt"),sep="\t")
-  x             <- x[,intersect(names(x),CCLE$Description)]
-  CCLE.trimmed  <- trimCCLE(x)
+  x             <- read.csv(file = paste0(curr.clines,"-entrez.txt"),sep="\t")
+  # names(x)      <- str_replace_all(names(x),"X","")
+  # x             <- x[,intersect(names(x),row.names(ax.trimmed))]
+  x$Sample      <- NULL
+  
   well.no       <- seq(1,nrow(x),1)
   well.no       <- paste(curr.clines,well.no,sep="_")
   l3.samples    <- c(l3.samples,rep(curr.clines,nrow(x)))
   row.names(x)  <- well.no
   l3.average   <- rbind(l3.average, colMeans(x))
   l3            <- rbind(l3,x)
-  cor.sp        <- apply(x,1, function(a) cor(a, CCLE.trimmed[names(a),curr.clines], use="complete.obs", method="spearman"))
+  cor.sp        <- apply(x,1, function(a) cor(a, ax.trimmed[names(a),curr.clines], use="complete.obs", method="spearman"))
   l3.spearman   <- c(l3.spearman,cor.sp)
-  cor.pr        <- apply(x,1, function(a) cor(a, CCLE.trimmed[names(a),curr.clines], use="complete.obs", method="pearson"))
+  cor.pr        <- apply(x,1, function(a) cor(a, ax.trimmed[names(a),curr.clines], use="complete.obs", method="pearson"))
   l3.pearson    <- c(l3.pearson,cor.pr)
 }
 l3             <- cbind(l3.samples,l3)
@@ -134,7 +141,7 @@ row.names(l3.average) <- CELL.LINES
 
 
 ####################### LEVEL 4  #######################
-setwd("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-Benchmark/UNTRT/L4/")
+setwd("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-BENCHMARK/ARRAYXPRESS/L4/")
 
 l4             <- NULL
 l4.samples     <- NULL
@@ -143,19 +150,20 @@ l4.pearson     <- NULL
 l4.average     <- NULL 
 for(curr.clines in CELL.LINES)
 {
-  x             <- read.csv(file = paste0(curr.clines,".txt"),sep="\t")
-  x             <- x[,intersect(names(x),CCLE$Description)]
-  CCLE.trimmed  <- trimCCLE(x)
-  CCLE.trimmed[CCLE.trimmed < 0]  <- NA
+  x             <- read.csv(file = paste0(curr.clines,"-entrez.txt"),sep="\t")
+  # names(x)      <- str_replace_all(names(x),"X","")
+  # x             <- x[,intersect(names(x),row.names(ax.trimmed))]
+  x$Sample      <- NULL
+  
   well.no       <- seq(1,nrow(x),1)
   well.no       <- paste(curr.clines,well.no,sep="_")
   l4.samples    <- c(l4.samples,rep(curr.clines,nrow(x)))
   row.names(x)  <- well.no
   l4.average    <- rbind(l4.average, colMeans(x))
   l4            <- rbind(l4,x)
-  cor.sp        <- apply(x,1, function(a) cor(a, CCLE.trimmed[names(a),curr.clines], use="complete.obs", method="spearman"))
+  cor.sp        <- apply(x,1, function(a) cor(a, ax.trimmed[names(a),curr.clines], use="complete.obs", method="spearman"))
   l4.spearman   <- c(l4.spearman,cor.sp)
-  cor.pr        <- apply(x,1, function(a) cor(a, CCLE.trimmed[names(a),curr.clines], use="complete.obs", method="pearson"))
+  cor.pr        <- apply(x,1, function(a) cor(a, ax.trimmed[names(a),curr.clines], use="complete.obs", method="pearson"))
   l4.pearson    <- c(l4.pearson,cor.pr)
 }
 l4              <- cbind(l4.samples,l4)
@@ -188,13 +196,13 @@ library(reshape2)
 raw.tableu    <- melt(raw.tableu, id=c("LEVEL", "CELL-LINE"))
 names(raw.tableu)[3] <- "GENE"
 names(raw.tableu)[4] <- "L1K"
-write.csv(raw.tableu, file="/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-Benchmark/TABLEU/AllWells-L1K-un.csv", row.names = F)
+write.csv(raw.tableu, file="/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-Benchmark/TABLEU/AX-AllWells-L1K-un.csv", row.names = F)
 
-#### CCLE DATA
-CCLE.tableu <- CCLE[CCLE$Description %in% levels(raw.tableu$GENE),c("Description",levels(CELL.LINES))]
-CCLE.tableu <- melt(CCLE.tableu, id=c("Description"))
-names(CCLE.tableu)  <- c("GENE","CELL-LINE","CCLE")
-write.csv(CCLE.tableu, file="/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-Benchmark/TABLEU/CCLE.csv", row.names = F,na="")
+#### ARRAY EXPRESS DATA
+ax.tableu <- ax[ax$ENTREZ %in% levels(raw.tableu$GENE),c("ENTREZ",paste(CELL.LINES))]
+ax.tableu <- melt(ax.tableu, id=c("ENTREZ"))
+names(ax.tableu)  <- c("GENE","CELL-LINE","ARRAYXPRESS")
+write.csv(ax.tableu, file="/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-Benchmark/TABLEU/AX.csv", row.names = F,na="")
 
 
 ## CORRELATION DATA
@@ -203,4 +211,6 @@ names(l2i.cor)  <- c("Level","CELL-LINE","SPEARMAN","PEARSON")
 names(l3.cor)   <- c("Level","CELL-LINE","SPEARMAN","PEARSON")
 names(l4.cor)   <- c("Level","CELL-LINE","SPEARMAN","PEARSON")
 cor.tableu      <- rbind(l2.cor,l2i.cor,l3.cor,l4.cor)
-write.csv(cor.tableu, file="/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-Benchmark/TABLEU/UNTREAT-CORR.csv", row.names = F)
+cor.tableu      <- cbind("ARRYXPRESS", cor.tableu)
+write.csv(cor.tableu, file="/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-Benchmark/TABLEU/UNTREAT-CORR-ARRXPRESS.csv", row.names = F)
+

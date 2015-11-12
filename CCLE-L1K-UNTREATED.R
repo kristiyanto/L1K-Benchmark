@@ -87,8 +87,8 @@ for(curr.clines in CELL.LINES)
   x             <- read.csv(file = paste0(curr.clines,".txt"),sep="\t")
   CCLE.trimmed  <- trimCCLE(x)
   x             <- x[1,row.names(CCLE.trimmed)]
-  l2.spearman   <- c(l2.spearman,cor(as.numeric(x[1,]), CCLE.trimmed[,curr.clines], use="complete.obs", method="spearman"))
-  l2.pearson    <- c(l2.pearson,cor(as.numeric(x[1,]), CCLE.trimmed[,curr.clines], use="complete.obs", method="pearson"))
+  l2.spearman   <- c(l2.spearman,cor(as.numeric(x[1,]), CCLE.trimmed[names(x),curr.clines], use="complete.obs", method="spearman"))
+  l2.pearson    <- c(l2.pearson,cor(as.numeric(x[1,]), CCLE.trimmed[names(x),curr.clines], use="complete.obs", method="pearson"))
   l2            <- rbind(l2,x)
 }
 
@@ -196,4 +196,6 @@ names(l2i.cor)  <- c("Level","CELL-LINE","SPEARMAN","PEARSON")
 names(l3.cor)   <- c("Level","CELL-LINE","SPEARMAN","PEARSON")
 names(l4.cor)   <- c("Level","CELL-LINE","SPEARMAN","PEARSON")
 cor.tableu      <- rbind(l2.cor,l2i.cor,l3.cor,l4.cor)
+cor.tableu      <- cbind("CCLE", cor.tableu)
+names(cor.tableu)[1] <- "VERSUS"
 write.csv(cor.tableu, file="/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-Benchmark/TABLEU/UNTREAT-CORR.csv", row.names = F)
