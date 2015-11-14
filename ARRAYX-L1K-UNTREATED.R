@@ -24,14 +24,6 @@ removex <- function(x)
   return(y)
 }
 
-trimCCLE <- function(x)
-{
-  y                   <- as.data.frame(CCLE[CCLE$Description %in% names(x),c("Description",paste(CELL.LINES))])
-  row.names(y)         <- y$Description
-  y$Description        <- NULL
-  return(y)
-}
-
 
 ####################### CELL LINES TO COMPARE #######################
 setwd("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-Benchmark/")
