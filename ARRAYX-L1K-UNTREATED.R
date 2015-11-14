@@ -18,12 +18,7 @@ breakit <- function(x)
   y <- paste
   return(y)
 }
-removex <- function(x)
-{
-  y <- substring(x,2)
-  return(y)
-}
-
+library("stringr")
 
 ####################### CELL LINES TO COMPARE #######################
 setwd("/Users/Daniel/Google Drive/BIOINFORMATICS/L1K-Benchmark/")
