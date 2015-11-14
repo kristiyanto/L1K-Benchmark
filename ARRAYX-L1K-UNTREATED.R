@@ -11,13 +11,6 @@
 
 ################################################################
 
-
-breakit <- function(x)
-{
-  y <- unlist(strsplit(x,"-"))
-  y <- paste
-  return(y)
-}
 library("stringr")
 
 ####################### CELL LINES TO COMPARE #######################
